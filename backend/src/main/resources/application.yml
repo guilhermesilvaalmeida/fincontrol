@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: fincontrol-api
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/fincontrol}
+    username: ${DATABASE_USERNAME:fincontrol}
+    password: ${DATABASE_PASSWORD:fincontrol}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: ${PORT:8080}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:change-this-secret-in-production-please-0123456789}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:1440}
+  cors:
+    origins: ${CORS_ORIGINS:http://localhost:3000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
