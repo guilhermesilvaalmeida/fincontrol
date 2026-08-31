@@ -2,16 +2,22 @@ export class ApiError extends Error {
   status: number;
   fieldErrors: { field: string; message: string }[];
 
-  constructor(status: number, message: string, fieldErrors: { field: string; message: string }[] = []) {
+  constructor(
+    status: number,
+    message: string,
+    fieldErrors: { field: string; message: string }[] = []
+  ) {
     super(message);
     this.status = status;
     this.fieldErrors = fieldErrors;
   }
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  // Sempre same-origin: o navegador nunca fala direto com a API, e nunca ve o token.
-  // A rota /api/[...path] do proprio Next.js repassa a chamada com o cookie httpOnly.
+async function request<T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<T> {
+
   const response = await fetch(path, {
     ...options,
     headers: {
@@ -29,7 +35,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (!response.ok) {
     throw new ApiError(
       response.status,
-      data?.message ?? "Nao foi possivel completar a operacao.",
+      data?.message ?? "Não foi possível completar a operação.",
       data?.fieldErrors ?? []
     );
   }
@@ -38,10 +44,21 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
-  get: <T>(path: string) => request<T>(path, { method: "GET" }),
+  get: <T>(path: string) =>
+    request<T>(path, { method: "GET" }),
+
   post: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: "POST", body: body ? JSON.stringify(body) : undefined }),
+    request<T>(path, {
+      method: "POST",
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
+
   put: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: "PUT", body: body ? JSON.stringify(body) : undefined }),
-  delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
+    request<T>(path, {
+      method: "PUT",
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
+
+  delete: <T>(path: string) =>
+    request<T>(path, { method: "DELETE" }),
 };
