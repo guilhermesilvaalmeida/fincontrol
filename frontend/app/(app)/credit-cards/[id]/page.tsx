@@ -7,19 +7,27 @@ import { Card } from "@/components/ui/Card";
 import { Money } from "@/components/ui/Money";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/lib/api";
-import type { CreditCard, InstallmentPurchase } from "@/types/finance";
+import type { CreditCard, Transaction } from "@/types/finance";
+
+function invoiceMonthKey(date: string) {
+  return date.slice(0, 7); // "yyyy-MM"
+}
+
+function invoiceLabel(key: string) {
+  const [year, month] = key.split("-");
+  return new Date(Number(year), Number(month) - 1, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+}
 
 export default function CreditCardDetailPage() {
   const params = useParams<{ id: string }>();
 
   const { data: cards, isLoading: loadingCards } = useSWR<CreditCard[]>("/api/credit-cards", api.get);
-  const { data: purchases, isLoading: loadingPurchases } = useSWR<InstallmentPurchase[]>(
-    "/api/installment-purchases",
+  const { data: transactions, isLoading: loadingTransactions } = useSWR<Transaction[]>(
+    `/api/transactions?creditCardId=${params.id}&sort=oldest`,
     api.get
   );
 
   const card = cards?.find((c) => c.id === params.id);
-  const cardPurchases = (purchases ?? []).filter((p) => p.creditCardId === params.id);
   const usedPercent = card && card.creditLimit > 0 ? Math.min(100, (card.committedAmount / card.creditLimit) * 100) : 0;
 
   if (loadingCards) {
@@ -36,6 +44,28 @@ export default function CreditCardDetailPage() {
       </Card>
     );
   }
+
+  const today = new Date();
+  const currentMonthKey = today.toISOString().slice(0, 7);
+
+  // Agrupa as transações do cartão por mês de vencimento (fatura)
+  const invoicesByMonth = new Map<string, Transaction[]>();
+  (transactions ?? []).forEach((t) => {
+    const key = invoiceMonthKey(t.occurredOn);
+    if (!invoicesByMonth.has(key)) invoicesByMonth.set(key, []);
+    invoicesByMonth.get(key)!.push(t);
+  });
+
+  const sortedMonthKeys = Array.from(invoicesByMonth.keys()).sort();
+  const currentInvoice = invoicesByMonth.get(currentMonthKey) ?? [];
+  const currentInvoiceTotal = currentInvoice.reduce((sum, t) => sum + t.amount, 0);
+
+  const pastInvoiceKeys = sortedMonthKeys.filter((k) => k < currentMonthKey).reverse();
+  const futureInvoiceKeys = sortedMonthKeys.filter((k) => k > currentMonthKey);
+  const futureTotal = futureInvoiceKeys.reduce(
+    (sum, key) => sum + (invoicesByMonth.get(key) ?? []).reduce((s, t) => s + t.amount, 0),
+    0
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -58,59 +88,82 @@ export default function CreditCardDetailPage() {
             <Money value={card.creditLimit} tone="muted" className="text-lg font-semibold" />
           </div>
           <div>
-            <p className="text-xs text-ink-400">Comprometido</p>
+            <p className="text-xs text-ink-400">Limite utilizado</p>
             <Money value={card.committedAmount} className="text-lg font-semibold" />
           </div>
           <div>
-            <p className="text-xs text-ink-400">Disponível</p>
+            <p className="text-xs text-ink-400">Limite disponível</p>
             <Money value={card.availableLimit} tone="positive" className="text-lg font-semibold" />
           </div>
           <div>
-            <p className="text-xs text-ink-400">Fecha / Vence</p>
-            <p className="text-lg font-semibold">
-              {card.closingDay} / {card.dueDay}
-            </p>
+            <p className="text-xs text-ink-400">Fecha dia {card.closingDay} · Vence dia {card.dueDay}</p>
           </div>
         </div>
       </Card>
 
       <div>
-        <h2 className="mb-3 font-display text-base font-semibold text-ink dark:text-white">Compras parceladas</h2>
+        <h2 className="mb-3 font-display text-base font-semibold text-ink dark:text-white">
+          Fatura atual · {invoiceLabel(currentMonthKey)}
+        </h2>
 
-        {loadingPurchases ? (
+        {loadingTransactions ? (
           <Skeleton className="h-24" />
-        ) : cardPurchases.length === 0 ? (
-          <Card className="py-8 text-center text-sm text-ink-400">Nenhuma compra parcelada neste cartão ainda.</Card>
+        ) : currentInvoice.length === 0 ? (
+          <Card className="py-8 text-center text-sm text-ink-400">Nenhuma compra nesta fatura ainda.</Card>
         ) : (
-          <div className="flex flex-col gap-3">
-            {cardPurchases.map((purchase) => (
-              <Card key={purchase.id}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-ink dark:text-white">{purchase.description}</p>
-                    <p className="text-xs text-ink-400">
-                      {purchase.installmentsCount}x de {purchase.installmentAmount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                    </p>
+          <Card className="flex flex-col gap-3">
+            <div className="flex items-center justify-between border-b border-ink-100 pb-3 dark:border-white/10">
+              <span className="text-sm text-ink-400">Total da fatura</span>
+              <Money value={currentInvoiceTotal} className="text-lg font-semibold" />
+            </div>
+            <ul className="flex flex-col divide-y divide-ink-100 dark:divide-white/10">
+              {currentInvoice.map((t) => (
+                <li key={t.id} className="flex items-center justify-between py-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <span aria-hidden>{t.category?.icon ?? "📦"}</span>
+                    <div>
+                      <p className="text-sm font-medium text-ink dark:text-white">{t.description}</p>
+                      {t.installmentNumber && t.installmentTotal && (
+                        <p className="text-xs text-ink-400">
+                          Parcela {t.installmentNumber}/{t.installmentTotal}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <Money value={purchase.totalAmount} className="font-semibold" />
-                </div>
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {purchase.installments.map((item) => (
-                    <span
-                      key={item.number}
-                      className="rounded-lg bg-ink-50 px-2.5 py-1 text-xs text-ink-700 dark:bg-white/5 dark:text-white/70"
-                    >
-                      {item.number}/{purchase.installmentsCount} ·{" "}
-                      {new Date(item.dueOn + "T00:00:00").toLocaleDateString("pt-BR", { month: "short", year: "2-digit" })}
-                    </span>
-                  ))}
-                </div>
-              </Card>
-            ))}
-          </div>
+                  <Money value={t.amount} className="text-sm" />
+                </li>
+              ))}
+            </ul>
+          </Card>
         )}
       </div>
+
+      {futureTotal > 0 && (
+        <div>
+          <h2 className="mb-3 font-display text-base font-semibold text-ink dark:text-white">Parcelas futuras</h2>
+          <Card className="flex items-center justify-between">
+            <span className="text-sm text-ink-400">Total comprometido nos próximos meses</span>
+            <Money value={futureTotal} className="text-lg font-semibold" />
+          </Card>
+        </div>
+      )}
+
+      {pastInvoiceKeys.length > 0 && (
+        <div>
+          <h2 className="mb-3 font-display text-base font-semibold text-ink dark:text-white">Histórico de faturas</h2>
+          <Card className="flex flex-col divide-y divide-ink-100 p-0 dark:divide-white/10">
+            {pastInvoiceKeys.map((key) => {
+              const invoiceTotal = (invoicesByMonth.get(key) ?? []).reduce((s, t) => s + t.amount, 0);
+              return (
+                <div key={key} className="flex items-center justify-between px-5 py-3.5">
+                  <span className="text-sm capitalize text-ink dark:text-white">{invoiceLabel(key)}</span>
+                  <Money value={invoiceTotal} tone="muted" className="text-sm" />
+                </div>
+              );
+            })}
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

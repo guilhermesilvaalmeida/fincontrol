@@ -14,6 +14,9 @@ const links = [
   { href: "/transactions", label: "Transações", icon: "💸" },
   { href: "/credit-cards", label: "Cartões", icon: "💳" },
   { href: "/accounts", label: "Contas", icon: "🏦" },
+  { href: "/budgets", label: "Orçamentos", icon: "🎯" },
+  { href: "/goals", label: "Metas", icon: "🏆" },
+  { href: "/reports", label: "Relatórios", icon: "📊" },
   { href: "/settings", label: "Configurações", icon: "⚙️" },
 ];
 

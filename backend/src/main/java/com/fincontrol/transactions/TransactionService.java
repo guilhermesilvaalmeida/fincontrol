@@ -48,6 +48,7 @@ public class TransactionService {
                 .and(hasType(filter.type()))
                 .and(hasCategory(filter.categoryId()))
                 .and(hasAccount(filter.accountId()))
+                .and(hasCreditCard(filter.creditCardId()))
                 .and(occurredFrom(filter.from()))
                 .and(occurredTo(filter.to()))
                 .and(amountFrom(filter.minAmount()))

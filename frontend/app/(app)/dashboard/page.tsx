@@ -6,12 +6,19 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Avatar } from "@/components/ui/Avatar";
 import { SummaryCards } from "@/components/dashboard/SummaryCards";
 import { ExpenseChart } from "@/components/dashboard/ExpenseChart";
 import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
 import { PeriodSelector, type DashboardPeriod } from "@/components/dashboard/PeriodSelector";
-import { Avatar } from "@/components/ui/Avatar";
-import type { DashboardResponse } from "@/types/finance";
+import { CurrentBalanceCard } from "@/components/dashboard/CurrentBalanceCard";
+import { UpcomingDuesCard } from "@/components/dashboard/UpcomingDuesCard";
+import { FutureInstallmentsCard } from "@/components/dashboard/FutureInstallmentsCard";
+import { BudgetSummaryCard } from "@/components/dashboard/BudgetSummaryCard";
+import { SpendableTodayCard } from "@/components/dashboard/SpendableTodayCard";
+import { InsightsCard } from "@/components/dashboard/InsightsCard";
+import { EvolutionChart } from "@/components/reports/EvolutionChart";
+import type { DashboardResponse, ReportsResponse } from "@/types/finance";
 import type { UserSummary } from "@/types/auth";
 
 function formatPeriodLabel(period: DashboardPeriod, start: string, end: string) {
@@ -36,6 +43,7 @@ export default function DashboardPage() {
 
   const { data, isLoading } = useSWR<DashboardResponse>(`/api/dashboard?period=${period}`, api.get);
   const { data: user } = useSWR<UserSummary>("/api/auth/me", api.get);
+  const { data: reports } = useSWR<ReportsResponse>("/api/reports", api.get);
 
   const periodLabel = data ? formatPeriodLabel(period, data.periodStart, data.periodEnd) : "";
 
@@ -66,8 +74,36 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
+          {/* 1. Saldo atual real (todas as contas) */}
+          <CurrentBalanceCard />
+
+          {/* 2-4. Receitas / Despesas / Economia do período + Saldo do período */}
           <SummaryCards data={data} />
+
+          {/* 5. Evolução receitas x despesas (últimos 6 meses) */}
+          {reports && <EvolutionChart data={reports.monthlyEvolution} />}
+
+          {/* 6. Gastos por categoria (do período selecionado) */}
           <ExpenseChart data={data.expensesByCategory} />
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {/* 7. Próximos vencimentos */}
+            <UpcomingDuesCard />
+            {/* 9. Orçamento mensal (resumo) */}
+            <BudgetSummaryCard />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {/* 8. Parcelas futuras */}
+            <FutureInstallmentsCard />
+            {/* 10. Quanto posso gastar? */}
+            <SpendableTodayCard />
+          </div>
+
+          {/* 11. Insights financeiros */}
+          <InsightsCard />
+
+          {/* 12. Últimos gastos */}
           <RecentTransactions items={data.recentTransactions} />
         </>
       )}

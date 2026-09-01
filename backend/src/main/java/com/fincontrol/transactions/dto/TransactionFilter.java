@@ -10,6 +10,7 @@ public record TransactionFilter(
         TransactionType type,
         UUID categoryId,
         UUID accountId,
+        UUID creditCardId,
         LocalDate from,
         LocalDate to,
         BigDecimal minAmount,

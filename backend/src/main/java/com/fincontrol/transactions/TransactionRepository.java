@@ -64,6 +64,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
 
     List<Transaction> findByInstallmentPurchaseIdOrderByInstallmentNumberAsc(UUID installmentPurchaseId);
 
+    List<Transaction> findByUserIdAndTypeAndDeletedAtIsNullAndOccurredOnBetweenOrderByAmountDesc(
+            UUID userId, TransactionType type, LocalDate from, LocalDate to, org.springframework.data.domain.Pageable pageable
+    );
+
     interface CategoryTotalProjection {
         UUID getCategoryId();
         BigDecimal getTotal();

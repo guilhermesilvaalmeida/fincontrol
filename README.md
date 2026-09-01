@@ -122,12 +122,12 @@ Backend: `mvn test` executa testes unitários com JUnit 5 + Mockito + AssertJ co
 | Fase | Escopo |
 |---|---|
 | ✅ 1 | Auth, contas, categorias, transações, dashboard |
-| ✅ 2 (parcial) | Cartões de crédito, parcelamento, modo escuro |
-| 2 (falta) | Fatura (aberta/fechada/paga), despesas recorrentes, orçamento por categoria |
-| 3 | Metas financeiras, relatórios comparativos, insights por regras, notificações |
+| ✅ 2 | Cartões de crédito, parcelamento, orçamentos por categoria, modo escuro |
+| ✅ 3 | Metas financeiras, relatórios (evolução mensal, comparação de categorias, maiores gastos), dashboard com 12 widgets (saldo real, "quanto posso gastar", insights por regras, próximos vencimentos) |
+| Falta na Fase 2/3 | Fatura com status aberta/fechada/paga (hoje a fatura é sempre "aberta", calculada em tempo real pelas transações — não há como marcar como paga ainda), despesas recorrentes automáticas, notificações |
 | Futuro | Conta familiar, OCR de notas, Open Finance, assistente de IA, apps nativos |
 
-## 9. Checklist de segurança antes de publicar
+## 10. Checklist de segurança antes de publicar
 
 **Já implementado no código:**
 - [x] Senhas com hash BCrypt
@@ -154,7 +154,7 @@ Backend: `mvn test` executa testes unitários com JUnit 5 + Mockito + AssertJ co
 - O logout invalida a sessão no navegador, mas o JWT em si continua tecnicamente válido até expirar (24h) caso alguém já o tenha copiado antes — para revogação imediata, seria necessário JWT com estado (blacklist) ou sessões no banco
 - `/api/transactions` retorna a lista completa filtrada, sem paginação — se o histórico crescer muito, isso pode ficar lento
 
-## 10. Como publicar de verdade (produção)
+## 11. Como publicar de verdade (produção)
 
 Recomendo o combo mais simples e barato para começar:
 

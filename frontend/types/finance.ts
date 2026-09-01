@@ -53,6 +53,68 @@ export interface TransactionPayload {
   notes?: string;
 }
 
+export interface Budget {
+  id: string;
+  categoryId: string;
+  categoryName: string;
+  categoryIcon: string | null;
+  categoryColor: string | null;
+  amount: number;
+  spent: number;
+  available: number;
+  percentUsed: number;
+  status: "ok" | "attention" | "near_limit" | "exceeded";
+}
+
+export interface BudgetPayload {
+  categoryId: string;
+  amount: number;
+}
+
+export interface Goal {
+  id: string;
+  name: string;
+  description: string | null;
+  targetAmount: number;
+  currentAmount: number;
+  remainingAmount: number;
+  percentComplete: number;
+  targetDate: string | null;
+  monthlyAmountNeeded: number | null;
+  completed: boolean;
+}
+
+export interface GoalPayload {
+  name: string;
+  targetAmount: number;
+  initialAmount?: number;
+  targetDate?: string;
+  description?: string;
+}
+
+export interface ReportsResponse {
+  monthlyEvolution: { month: string; income: number; expense: number }[];
+  categoryComparison: {
+    categoryId: string;
+    name: string;
+    icon: string | null;
+    currentAmount: number;
+    previousAmount: number;
+    percentChange: number;
+  }[];
+  topExpenses: {
+    id: string;
+    description: string;
+    amount: number;
+    occurredOn: string;
+    categoryName: string;
+    categoryIcon: string | null;
+  }[];
+  currentMonthIncome: number;
+  currentMonthExpense: number;
+  currentMonthSavingsRate: number;
+}
+
 export interface CreditCard {
   id: string;
   name: string;

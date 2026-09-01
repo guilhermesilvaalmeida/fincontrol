@@ -16,7 +16,13 @@ import type { Account, Category, TransactionType } from "@/types/finance";
 
 const paymentMethods = ["Dinheiro", "Débito", "Crédito", "Pix", "Transferência"];
 
-export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
+export function TransactionForm({
+  onSuccess,
+  defaultType = "EXPENSE",
+}: {
+  onSuccess?: () => void;
+  defaultType?: TransactionType;
+}) {
   const { data: categories } = useSWR<Category[]>("/api/categories", api.get);
   const { data: accounts } = useSWR<Account[]>("/api/accounts", api.get);
 
@@ -35,7 +41,7 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
   } = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
-      type: "EXPENSE",
+      type: defaultType,
       occurredOn: new Date().toISOString().slice(0, 10),
       amount: 0,
     },

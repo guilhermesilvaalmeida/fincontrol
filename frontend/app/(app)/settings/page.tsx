@@ -42,6 +42,14 @@ export default function SettingsPage() {
           🏦 Contas
           <span className="text-ink-400">›</span>
         </Link>
+        <Link href="/budgets" className="flex items-center justify-between px-5 py-4 text-sm font-medium text-ink dark:text-white">
+          🎯 Orçamentos
+          <span className="text-ink-400">›</span>
+        </Link>
+        <Link href="/goals" className="flex items-center justify-between px-5 py-4 text-sm font-medium text-ink dark:text-white">
+          🏆 Metas
+          <span className="text-ink-400">›</span>
+        </Link>
       </Card>
 
       <Button variant="danger" onClick={logout} className="w-full">

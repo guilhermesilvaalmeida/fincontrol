@@ -31,6 +31,10 @@ public final class TransactionSpecifications {
         return (root, query, cb) -> accountId == null ? null : cb.equal(root.get("accountId"), accountId);
     }
 
+    public static Specification<Transaction> hasCreditCard(UUID creditCardId) {
+        return (root, query, cb) -> creditCardId == null ? null : cb.equal(root.get("creditCardId"), creditCardId);
+    }
+
     public static Specification<Transaction> occurredFrom(LocalDate from) {
         return (root, query, cb) -> from == null ? null : cb.greaterThanOrEqualTo(root.get("occurredOn"), from);
     }
