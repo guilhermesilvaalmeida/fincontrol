@@ -12,10 +12,10 @@ import type { CreditCard, InstallmentPurchase } from "@/types/finance";
 export default function CreditCardDetailPage() {
   const params = useParams<{ id: string }>();
 
-  const { data: cards, isLoading: loadingCards } = useSWR<CreditCard[]>("/api/credit-cards", (url: string) => api.get(url));
+  const { data: cards, isLoading: loadingCards } = useSWR<CreditCard[]>("/api/credit-cards", api.get);
   const { data: purchases, isLoading: loadingPurchases } = useSWR<InstallmentPurchase[]>(
     "/api/installment-purchases",
-    (url: string) => api.get(url)
+    api.get
   );
 
   const card = cards?.find((c) => c.id === params.id);

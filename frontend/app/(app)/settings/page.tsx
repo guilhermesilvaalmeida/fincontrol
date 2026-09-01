@@ -10,7 +10,7 @@ import { logout } from "@/lib/auth";
 import type { UserSummary } from "@/types/auth";
 
 export default function SettingsPage() {
-  const { data: user } = useSWR<UserSummary>("/api/auth/me", (url: string) => api.get(url));
+  const { data: user } = useSWR<UserSummary>("/api/auth/me", api.get);
 
   return (
     <div className="mx-auto flex max-w-md flex-col gap-6">

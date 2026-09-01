@@ -14,8 +14,8 @@ import type { UserSummary } from "@/types/auth";
 const monthLabel = new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 
 export default function DashboardPage() {
-  const { data, isLoading } = useSWR<DashboardResponse>("/api/dashboard", (url: string) => api.get(url));
-  const { data: user } = useSWR<UserSummary>("/api/auth/me", (url: string) => api.get(url));
+  const { data, isLoading } = useSWR<DashboardResponse>("/api/dashboard", api.get);
+  const { data: user } = useSWR<UserSummary>("/api/auth/me", api.get);
 
   return (
     <div className="flex flex-col gap-6">

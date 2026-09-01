@@ -12,7 +12,7 @@ import { api } from "@/lib/api";
 import type { CreditCard } from "@/types/finance";
 
 export default function CreditCardsPage() {
-  const { data: cards, isLoading, mutate } = useSWR<CreditCard[]>("/api/credit-cards", (url: string) => api.get(url));
+  const { data: cards, isLoading, mutate } = useSWR<CreditCard[]>("/api/credit-cards", api.get);
   const [showCardForm, setShowCardForm] = useState(false);
   const [showPurchaseForm, setShowPurchaseForm] = useState(false);
 

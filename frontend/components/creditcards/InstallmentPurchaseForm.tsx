@@ -22,8 +22,8 @@ export function InstallmentPurchaseForm({
   defaultCreditCardId?: string;
   onSuccess: () => void;
 }) {
-  const { data: cards } = useSWR<CreditCard[]>("/api/credit-cards", (url: string) => api.get(url));
-  const { data: categories } = useSWR<Category[]>("/api/categories", (url: string) => api.get(url));
+  const { data: cards } = useSWR<CreditCard[]>("/api/credit-cards", api.get);
+  const { data: categories } = useSWR<Category[]>("/api/categories", api.get);
   const expenseCategories = (categories ?? []).filter((c) => c.groupName !== "Receitas");
 
   const [amountDigits, setAmountDigits] = useState("");
