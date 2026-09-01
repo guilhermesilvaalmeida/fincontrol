@@ -50,6 +50,20 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
 
     List<Transaction> findTop5ByUserIdAndDeletedAtIsNullOrderByOccurredOnDescCreatedAtDesc(UUID userId);
 
+    @Query("""
+            SELECT COALESCE(SUM(t.amount), 0)
+            FROM Transaction t
+            WHERE t.creditCardId = :creditCardId AND t.userId = :userId
+              AND t.occurredOn >= :fromDate AND t.deletedAt IS NULL
+            """)
+    BigDecimal sumCommittedByCreditCard(
+            @Param("creditCardId") UUID creditCardId,
+            @Param("userId") UUID userId,
+            @Param("fromDate") LocalDate fromDate
+    );
+
+    List<Transaction> findByInstallmentPurchaseIdOrderByInstallmentNumberAsc(UUID installmentPurchaseId);
+
     interface CategoryTotalProjection {
         UUID getCategoryId();
         BigDecimal getTotal();

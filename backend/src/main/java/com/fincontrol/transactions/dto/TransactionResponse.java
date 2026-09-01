@@ -13,10 +13,14 @@ public record TransactionResponse(
         String description,
         CategoryRef category,
         AccountRef account,
+        CreditCardRef creditCard,
+        Integer installmentNumber,
+        Integer installmentTotal,
         String paymentMethod,
         LocalDate occurredOn,
         String notes
 ) {
     public record CategoryRef(UUID id, String name, String icon, String color) {}
     public record AccountRef(UUID id, String name) {}
+    public record CreditCardRef(UUID id, String name) {}
 }

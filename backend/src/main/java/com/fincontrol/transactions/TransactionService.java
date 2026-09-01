@@ -5,6 +5,8 @@ import com.fincontrol.accounts.AccountRepository;
 import com.fincontrol.categories.Category;
 import com.fincontrol.categories.CategoryRepository;
 import com.fincontrol.common.ResourceNotFoundException;
+import com.fincontrol.creditcards.CreditCard;
+import com.fincontrol.creditcards.CreditCardRepository;
 import com.fincontrol.transactions.dto.TransactionFilter;
 import com.fincontrol.transactions.dto.TransactionRequest;
 import com.fincontrol.transactions.dto.TransactionResponse;
@@ -25,15 +27,18 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
     private final CategoryRepository categoryRepository;
+    private final CreditCardRepository creditCardRepository;
 
     public TransactionService(
             TransactionRepository transactionRepository,
             AccountRepository accountRepository,
-            CategoryRepository categoryRepository
+            CategoryRepository categoryRepository,
+            CreditCardRepository creditCardRepository
     ) {
         this.transactionRepository = transactionRepository;
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
+        this.creditCardRepository = creditCardRepository;
     }
 
     public List<TransactionResponse> list(UUID userId, TransactionFilter filter) {
@@ -124,7 +129,8 @@ public class TransactionService {
 
     private TransactionResponse toResponse(Transaction t) {
         Category category = categoryRepository.findById(t.getCategoryId()).orElse(null);
-        Account account = accountRepository.findById(t.getAccountId()).orElse(null);
+        Account account = t.getAccountId() != null ? accountRepository.findById(t.getAccountId()).orElse(null) : null;
+        CreditCard creditCard = t.getCreditCardId() != null ? creditCardRepository.findById(t.getCreditCardId()).orElse(null) : null;
 
         return new TransactionResponse(
                 t.getId(),
@@ -133,6 +139,9 @@ public class TransactionService {
                 t.getDescription(),
                 category == null ? null : new TransactionResponse.CategoryRef(category.getId(), category.getName(), category.getIcon(), category.getColor()),
                 account == null ? null : new TransactionResponse.AccountRef(account.getId(), account.getName()),
+                creditCard == null ? null : new TransactionResponse.CreditCardRef(creditCard.getId(), creditCard.getName()),
+                t.getInstallmentNumber(),
+                t.getInstallmentTotal(),
                 t.getPaymentMethod(),
                 t.getOccurredOn(),
                 t.getNotes()

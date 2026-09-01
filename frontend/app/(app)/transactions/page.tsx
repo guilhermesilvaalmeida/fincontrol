@@ -18,15 +18,8 @@ export default function TransactionsPage() {
   const [accountId, setAccountId] = useState("");
   const [sort, setSort] = useState("recent");
 
-  const { data: categories } = useSWR<Category[]>(
-  "/api/categories",
-  (url: string) => api.get<Category[]>(url)
-);
-
-  const { data: accounts } = useSWR<Account[]>(
-  "/api/accounts",
-  (url: string) => api.get<Account[]>(url)
-);
+  const { data: categories } = useSWR<Category[]>("/api/categories", (url: string) => api.get(url));
+  const { data: accounts } = useSWR<Account[]>("/api/accounts", (url: string) => api.get(url));
 
   const params = new URLSearchParams();
   if (query) params.set("q", query);
@@ -36,9 +29,9 @@ export default function TransactionsPage() {
   if (sort) params.set("sort", sort);
 
   const { data: transactions, isLoading } = useSWR<Transaction[]>(
-  `/api/transactions?${params.toString()}`,
-  (url: string) => api.get<Transaction[]>(url)
-);
+    `/api/transactions?${params.toString()}`,
+    (url: string) => api.get(url)
+  );
 
   return (
     <div className="flex flex-col gap-6">

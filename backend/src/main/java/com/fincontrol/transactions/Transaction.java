@@ -21,11 +21,23 @@ public class Transaction extends BaseEntity {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    @Column(name = "account_id", nullable = false)
+    @Column(name = "account_id")
     private UUID accountId;
 
     @Column(name = "category_id", nullable = false)
     private UUID categoryId;
+
+    @Column(name = "credit_card_id")
+    private UUID creditCardId;
+
+    @Column(name = "installment_purchase_id")
+    private UUID installmentPurchaseId;
+
+    @Column(name = "installment_number")
+    private Integer installmentNumber;
+
+    @Column(name = "installment_total")
+    private Integer installmentTotal;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)

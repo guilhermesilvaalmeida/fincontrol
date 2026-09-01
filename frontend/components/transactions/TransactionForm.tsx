@@ -16,15 +16,8 @@ import type { Account, Category, TransactionType } from "@/types/finance";
 const paymentMethods = ["Dinheiro", "Débito", "Crédito", "Pix", "Transferência"];
 
 export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
-  const { data: categories } = useSWR<Category[]>(
-  "/api/categories",
-  (url: string) => api.get<Category[]>(url)
-);
-
-  const { data: accounts } = useSWR<Account[]>(
-  "/api/accounts",
-  (url: string) => api.get<Account[]>(url)
-);
+  const { data: categories } = useSWR<Category[]>("/api/categories", (url: string) => api.get(url));
+  const { data: accounts } = useSWR<Account[]>("/api/accounts", (url: string) => api.get(url));
 
   const [amountDigits, setAmountDigits] = useState("");
   const [formError, setFormError] = useState<string | null>(null);

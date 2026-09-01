@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Sora, Inter, IBM_Plex_Mono } from "next/font/google";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
+import { ThemeScript } from "@/components/ThemeScript";
 import "./globals.css";
 
 const sora = Sora({ subsets: ["latin"], variable: "--font-sora", weight: ["600", "700"] });
@@ -26,6 +27,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${sora.variable} ${inter.variable} ${plexMono.variable}`}>
+      <head>
+        <ThemeScript />
+      </head>
       <body>
         {children}
         <ServiceWorkerRegistrar />

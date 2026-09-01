@@ -32,3 +32,19 @@ body {
 .money {
   @apply font-mono tabular-nums;
 }
+
+/* Evita que o navegador dê zoom automático ao focar em campos no mobile
+   (isso acontecia porque o texto do input ficava menor que 16px). */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Evita rolagem horizontal acidental em telas pequenas */
+html,
+body {
+  overflow-x: hidden;
+}

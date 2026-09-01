@@ -20,10 +20,7 @@ const typeLabels: Record<Account["type"], string> = {
 };
 
 export default function AccountsPage() {
-  const { data: accounts, isLoading, mutate } = useSWR<Account[]>(
-  "/api/accounts",
-  (url: string) => api.get<Account[]>(url)
-);
+  const { data: accounts, isLoading, mutate } = useSWR<Account[]>("/api/accounts", (url: string) => api.get(url));
   const [showForm, setShowForm] = useState(false);
 
   return (

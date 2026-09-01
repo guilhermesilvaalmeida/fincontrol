@@ -8,7 +8,9 @@ import { logout } from "@/lib/auth";
 const links = [
   { href: "/dashboard", label: "Início", icon: "🏠" },
   { href: "/transactions", label: "Transações", icon: "💸" },
+  { href: "/credit-cards", label: "Cartões", icon: "💳" },
   { href: "/accounts", label: "Contas", icon: "🏦" },
+  { href: "/settings", label: "Configurações", icon: "⚙️" },
 ];
 
 export function Sidebar() {

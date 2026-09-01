@@ -34,6 +34,9 @@ export interface Transaction {
   description: string;
   category: { id: string; name: string; icon: string | null; color: string | null } | null;
   account: { id: string; name: string } | null;
+  creditCard: { id: string; name: string } | null;
+  installmentNumber: number | null;
+  installmentTotal: number | null;
   paymentMethod: string | null;
   occurredOn: string;
   notes: string | null;
@@ -48,6 +51,52 @@ export interface TransactionPayload {
   paymentMethod?: string;
   occurredOn: string;
   notes?: string;
+}
+
+export interface CreditCard {
+  id: string;
+  name: string;
+  bank: string | null;
+  creditLimit: number;
+  closingDay: number;
+  dueDay: number;
+  committedAmount: number;
+  availableLimit: number;
+}
+
+export interface CreditCardPayload {
+  name: string;
+  bank?: string;
+  creditLimit: number;
+  closingDay: number;
+  dueDay: number;
+}
+
+export interface InstallmentItem {
+  number: number;
+  amount: number;
+  dueOn: string;
+}
+
+export interface InstallmentPurchase {
+  id: string;
+  description: string;
+  totalAmount: number;
+  installmentsCount: number;
+  installmentAmount: number;
+  purchaseDate: string;
+  creditCardId: string;
+  creditCardName: string | null;
+  installments: InstallmentItem[];
+}
+
+export interface InstallmentPurchasePayload {
+  description: string;
+  totalAmount: number;
+  installmentsCount: number;
+  creditCardId: string;
+  categoryId: string;
+  purchaseDate: string;
 }
 
 export interface DashboardResponse {

@@ -4,17 +4,24 @@
 
 MVP funcional de um sistema de controle financeiro pessoal, com backend em Java/Spring Boot e frontend em Next.js. Este README cobre a **Fase 1** do roadmap (auth, contas, categorias, transações e dashboard).
 
-## 1. Funcionalidades da Fase 1
+## 1. Funcionalidades
 
-- Cadastro e login com JWT (senha com hash BCrypt)
+**Fase 1:**
+- Cadastro e login com JWT (senha com hash BCrypt), sessão via cookie `httpOnly` (padrão BFF)
 - Dashboard mensal: receitas, despesas, saldo, % de economia, gráfico de despesas por categoria, últimas transações
 - Contas bancárias/carteiras com saldo calculado automaticamente
 - Categorias padrão pré-cadastradas no primeiro acesso + criação de categorias próprias
-- Lançamento de receitas e despesas com formulário rápido (máscara monetária, seleção de categoria/conta/forma de pagamento)
-- Listagem de transações com filtros (tipo, categoria, conta, valor, período), busca por descrição e ordenação
-- Layout responsivo mobile-first (bottom nav no celular, sidebar no desktop) com suporte a PWA (instalável, ícones, service worker)
+- Lançamento de receitas e despesas com formulário rápido (máscara monetária)
+- Listagem de transações com filtros (tipo, categoria, conta, valor, período), busca e ordenação
+- Layout responsivo mobile-first (bottom nav no celular, sidebar no desktop), PWA instalável
 
-Cartões de crédito, faturas, parcelamento, despesas recorrentes, orçamentos, metas, relatórios comparativos e insights ficam para as Fases 2 e 3 (arquitetura já preparada — ver seção 7).
+**Fase 2 (novo):**
+- **Cartões de crédito**: cadastro com limite, dia de fechamento e vencimento; card visual mostra limite comprometido vs. disponível
+- **Compras parceladas**: registre o valor total e o número de parcelas — o sistema gera automaticamente uma transação de despesa por parcela, distribuída mês a mês, com o resto do arredondamento absorvido na última parcela (ex.: R$100 em 3x → R$33,33 + R$33,33 + R$33,34)
+- **Modo escuro**: Claro / Escuro / Sistema, persistido no navegador, acessível em Configurações
+- Página de **Configurações** com dados da conta, tema e botão de sair
+
+Cartões de crédito ainda não têm o conceito de "fatura fechada/paga" (isso é a próxima peça natural — ver seção 9); hoje o valor comprometido é sempre a soma das parcelas com vencimento a partir do início do mês atual. Orçamentos, despesas recorrentes, metas e relatórios comparativos ficam para a Fase 3.
 
 ## 2. Stack
 
@@ -114,9 +121,64 @@ Backend: `mvn test` executa testes unitários com JUnit 5 + Mockito + AssertJ co
 
 | Fase | Escopo |
 |---|---|
-| ✅ 1 | Auth, contas, categorias, transações, dashboard (este README) |
-| 2 | Cartões de crédito, faturas, parcelamento, despesas recorrentes, orçamento por categoria |
+| ✅ 1 | Auth, contas, categorias, transações, dashboard |
+| ✅ 2 (parcial) | Cartões de crédito, parcelamento, modo escuro |
+| 2 (falta) | Fatura (aberta/fechada/paga), despesas recorrentes, orçamento por categoria |
 | 3 | Metas financeiras, relatórios comparativos, insights por regras, notificações |
 | Futuro | Conta familiar, OCR de notas, Open Finance, assistente de IA, apps nativos |
 
+## 9. Checklist de segurança antes de publicar
+
+**Já implementado no código:**
+- [x] Senhas com hash BCrypt
+- [x] Token JWT em cookie `httpOnly` (nunca exposto ao JS do navegador) via padrão BFF
+- [x] Rate limiting em `/auth/login` e `/auth/register`
+- [x] Toda query filtrada por `userId` (isolamento entre usuários)
+- [x] Queries parametrizadas (sem risco de SQL Injection)
+- [x] Headers de segurança (`X-Frame-Options: DENY`, `X-Content-Type-Options`, HSTS)
+- [x] CORS restrito por variável de ambiente (não aberto por padrão)
+
+**Você precisa fazer antes de ir ao ar (checklist de deploy):**
+- [ ] Gerar um `JWT_SECRET` forte e único — **nunca** use o valor de exemplo do `.env.example`:
+  ```bash
+  openssl rand -base64 48
+  ```
+- [ ] Definir `CORS_ORIGINS` no backend com o domínio **exato** do seu frontend em produção (ex.: `https://fincontrol.vercel.app`), nunca com `*`
+- [ ] Garantir que o banco gerenciado (Railway/Supabase/RDS) só aceita conexões via SSL e não está com a porta aberta publicamente sem senha forte
+- [ ] Confirmar que `backend/.env` e `frontend/.env.local` **nunca** vão parar num repositório Git público (já estão no `.gitignore`, mas confira antes do primeiro `git push`)
+- [ ] Ativar HTTPS em frontend e backend (Vercel já entrega por padrão; no backend, o provedor de hospedagem geralmente também entrega — confirme antes de publicar)
+
+**Limitações conhecidas da Fase 1 (não bloqueiam o "ir ao ar", mas valem planejar):**
+- Não há verificação de e-mail no cadastro
+- Não há fluxo de recuperação/troca de senha (estava no escopo original, fica para a Fase 2)
+- O logout invalida a sessão no navegador, mas o JWT em si continua tecnicamente válido até expirar (24h) caso alguém já o tenha copiado antes — para revogação imediata, seria necessário JWT com estado (blacklist) ou sessões no banco
+- `/api/transactions` retorna a lista completa filtrada, sem paginação — se o histórico crescer muito, isso pode ficar lento
+
+## 10. Como publicar de verdade (produção)
+
+Recomendo o combo mais simples e barato para começar:
+
+**Banco de dados — Railway, Supabase ou Neon (PostgreSQL gerenciado)**
+1. Crie um banco PostgreSQL gerenciado em um desses provedores
+2. Copie a `DATABASE_URL`/credenciais fornecidas
+
+**Backend — Railway ou Render (suportam Docker)**
+1. Crie um novo serviço apontando para a pasta `backend/` (ele vai usar o `Dockerfile` já pronto)
+2. Configure as variáveis de ambiente no painel do serviço:
+   - `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` (do banco criado acima)
+   - `JWT_SECRET` (o valor forte gerado no checklist acima)
+   - `CORS_ORIGINS` (o domínio do seu frontend — você vai preencher depois de criar o frontend na Vercel)
+   - `SPRING_PROFILES_ACTIVE=prod` *(opcional — crie um `application-prod.yml` se quiser logs menos verbosos)*
+3. Ao subir, o Flyway roda as migrations automaticamente. Anote a URL pública gerada (ex.: `https://fincontrol-api.up.railway.app`)
+
+**Frontend — Vercel**
+1. Importe o repositório (pasta `frontend/`) na Vercel
+2. Configure a variável de ambiente:
+   - `BACKEND_API_URL` = a URL pública do backend que você anotou acima
+3. Deploy. A Vercel te dá um domínio `https://seu-projeto.vercel.app` com HTTPS automático
+
+**Por último, feche o ciclo do CORS:**
+Volte no serviço do backend (Railway/Render) e atualize `CORS_ORIGINS` com o domínio real da Vercel. Redeploy o backend.
+
+Pronto — a partir daí o sistema fica acessível de qualquer lugar, para você e para o pessoal de casa, com HTTPS em ambas as pontas e o token JWT nunca exposto ao navegador.
 
