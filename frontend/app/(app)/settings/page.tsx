@@ -4,6 +4,7 @@ import Link from "next/link";
 import useSWR from "swr";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Avatar } from "@/components/ui/Avatar";
 import { ThemeToggle } from "@/components/settings/ThemeToggle";
 import { api } from "@/lib/api";
 import { logout } from "@/lib/auth";
@@ -16,11 +17,16 @@ export default function SettingsPage() {
     <div className="mx-auto flex max-w-md flex-col gap-6">
       <h1 className="font-display text-xl font-bold text-ink dark:text-white">Configurações</h1>
 
-      <Card>
-        <p className="text-xs font-medium uppercase tracking-wide text-ink-400">Sua conta</p>
-        <p className="mt-2 font-medium text-ink dark:text-white">{user?.name ?? "..."}</p>
-        <p className="text-sm text-ink-400">{user?.email ?? ""}</p>
-      </Card>
+      <Link href="/profile">
+        <Card className="flex items-center gap-3 transition-shadow hover:shadow-lg">
+          <Avatar name={user?.name ?? "?"} src={user?.avatar} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-medium text-ink dark:text-white">{user?.name ?? "..."}</p>
+            <p className="truncate text-sm text-ink-400">{user?.email ?? ""}</p>
+          </div>
+          <span className="text-ink-400">›</span>
+        </Card>
+      </Link>
 
       <Card>
         <p className="mb-3 text-xs font-medium uppercase tracking-wide text-ink-400">Aparência</p>

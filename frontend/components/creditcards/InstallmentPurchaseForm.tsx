@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { api, ApiError } from "@/lib/api";
+import { revalidateAll } from "@/lib/revalidate";
 import { formatBRL, formatBRLInputFromDigits, parseBRLInput } from "@/lib/currency";
 import {
   installmentPurchaseSchema,
@@ -59,6 +60,7 @@ export function InstallmentPurchaseForm({
     setFormError(null);
     try {
       await api.post("/api/installment-purchases", values);
+      revalidateAll();
       onSuccess();
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : "Não foi possível registrar a compra parcelada.");

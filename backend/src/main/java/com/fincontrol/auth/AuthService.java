@@ -3,8 +3,10 @@ package com.fincontrol.auth;
 import com.fincontrol.auth.dto.AuthResponse;
 import com.fincontrol.auth.dto.LoginRequest;
 import com.fincontrol.auth.dto.RegisterRequest;
+import com.fincontrol.auth.dto.UpdateProfileRequest;
 import com.fincontrol.categories.DefaultCategorySeeder;
 import com.fincontrol.common.BusinessException;
+import com.fincontrol.common.ResourceNotFoundException;
 import com.fincontrol.security.JwtService;
 import com.fincontrol.users.User;
 import com.fincontrol.users.UserRepository;
@@ -67,6 +69,18 @@ public class AuthService {
 
     private AuthResponse buildResponse(User user) {
         String token = jwtService.generateToken(user.getId(), user.getEmail());
-        return new AuthResponse(token, new AuthResponse.UserSummary(user.getId(), user.getName(), user.getEmail()));
+        return new AuthResponse(token, new AuthResponse.UserSummary(user.getId(), user.getName(), user.getEmail(), user.getAvatar()));
+    }
+
+    @Transactional
+    public AuthResponse.UserSummary updateProfile(java.util.UUID userId, UpdateProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
+
+        user.setName(request.name().trim());
+        user.setAvatar(request.avatar());
+        userRepository.save(user);
+
+        return new AuthResponse.UserSummary(user.getId(), user.getName(), user.getEmail(), user.getAvatar());
     }
 }

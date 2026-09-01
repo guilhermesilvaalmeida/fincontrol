@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { api, ApiError } from "@/lib/api";
+import { revalidateAll } from "@/lib/revalidate";
 import { formatBRLInputFromDigits, parseBRLInput } from "@/lib/currency";
 import { creditCardSchema, type CreditCardFormValues } from "@/lib/validators/creditCard";
 
@@ -30,6 +31,7 @@ export function CreditCardForm({ onSuccess }: { onSuccess: () => void }) {
     setFormError(null);
     try {
       await api.post("/api/credit-cards", values);
+      revalidateAll();
       onSuccess();
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : "Não foi possível salvar o cartão.");

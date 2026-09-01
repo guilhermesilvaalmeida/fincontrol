@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { api, ApiError } from "@/lib/api";
+import { revalidateAll } from "@/lib/revalidate";
 import { formatBRLInputFromDigits, parseBRLInput } from "@/lib/currency";
 import { transactionSchema, type TransactionFormValues } from "@/lib/validators/transaction";
 import type { Account, Category, TransactionType } from "@/types/finance";
@@ -55,6 +56,7 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
     setFormError(null);
     try {
       await api.post("/api/transactions", values);
+      revalidateAll();
       setSuccess(true);
       setAmountDigits("");
       reset({

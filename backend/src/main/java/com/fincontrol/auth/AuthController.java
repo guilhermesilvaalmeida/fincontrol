@@ -3,6 +3,7 @@ package com.fincontrol.auth;
 import com.fincontrol.auth.dto.AuthResponse;
 import com.fincontrol.auth.dto.LoginRequest;
 import com.fincontrol.auth.dto.RegisterRequest;
+import com.fincontrol.auth.dto.UpdateProfileRequest;
 import com.fincontrol.security.CurrentUser;
 import com.fincontrol.security.RateLimiter;
 import com.fincontrol.users.User;
@@ -46,7 +47,15 @@ public class AuthController {
     public ResponseEntity<AuthResponse.UserSummary> me(@AuthenticationPrincipal CurrentUser currentUser) {
         User user = userRepository.findById(currentUser.id())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
-        return ResponseEntity.ok(new AuthResponse.UserSummary(user.getId(), user.getName(), user.getEmail()));
+        return ResponseEntity.ok(new AuthResponse.UserSummary(user.getId(), user.getName(), user.getEmail(), user.getAvatar()));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<AuthResponse.UserSummary> updateProfile(
+            @AuthenticationPrincipal CurrentUser currentUser,
+            @Valid @RequestBody UpdateProfileRequest request
+    ) {
+        return ResponseEntity.ok(authService.updateProfile(currentUser.id(), request));
     }
 
     private void checkRateLimit(HttpServletRequest request, String scope, int maxAttempts, long windowSeconds) {

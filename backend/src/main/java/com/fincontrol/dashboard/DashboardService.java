@@ -10,8 +10,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -28,8 +30,23 @@ public class DashboardService {
     }
 
     public DashboardResponse getMonthlyDashboard(UUID userId, YearMonth month) {
-        LocalDate periodStart = month.atDay(1);
-        LocalDate periodEnd = month.atEndOfMonth();
+        return getDashboard(userId, DashboardPeriod.MONTH, month.atDay(1));
+    }
+
+    public DashboardResponse getDashboard(UUID userId, DashboardPeriod period, LocalDate anchorDate) {
+        LocalDate date = anchorDate != null ? anchorDate : LocalDate.now();
+        LocalDate periodStart = switch (period) {
+            case DAY -> date;
+            case WEEK -> date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+            case MONTH -> date.withDayOfMonth(1);
+            case YEAR -> date.withDayOfYear(1);
+        };
+        LocalDate periodEnd = switch (period) {
+            case DAY -> date;
+            case WEEK -> periodStart.plusDays(6);
+            case MONTH -> date.withDayOfMonth(date.lengthOfMonth());
+            case YEAR -> date.withDayOfYear(date.lengthOfYear());
+        };
 
         BigDecimal totalIncome = scale(transactionRepository.sumByTypeAndPeriod(userId, TransactionType.INCOME, periodStart, periodEnd));
         BigDecimal totalExpense = scale(transactionRepository.sumByTypeAndPeriod(userId, TransactionType.EXPENSE, periodStart, periodEnd));

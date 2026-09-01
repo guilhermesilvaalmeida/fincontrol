@@ -2,8 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import useSWR from "swr";
 import clsx from "clsx";
 import { logout } from "@/lib/auth";
+import { api } from "@/lib/api";
+import { Avatar } from "@/components/ui/Avatar";
+import type { UserSummary } from "@/types/auth";
 
 const links = [
   { href: "/dashboard", label: "Início", icon: "🏠" },
@@ -15,12 +19,24 @@ const links = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { data: user } = useSWR<UserSummary>("/api/auth/me", api.get);
 
   return (
     <aside className="hidden w-60 flex-col border-r border-ink-100 bg-surface-card px-4 py-6 dark:border-white/10 dark:bg-surface-cardDark md:flex">
       <div className="mb-8 px-2">
         <span className="font-display text-lg font-bold text-ink dark:text-white">FinControl</span>
       </div>
+
+      <Link
+        href="/profile"
+        className="mb-6 flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-ink-50 dark:hover:bg-white/5"
+      >
+        <Avatar name={user?.name ?? "?"} src={user?.avatar} size="sm" />
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-ink dark:text-white">{user?.name ?? "..."}</p>
+          <p className="truncate text-xs text-ink-400">Ver perfil</p>
+        </div>
+      </Link>
 
       <nav className="flex flex-1 flex-col gap-1">
         {links.map((link) => {

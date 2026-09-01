@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.YearMonth;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/dashboard")
@@ -25,9 +25,10 @@ public class DashboardController {
     @GetMapping
     public ResponseEntity<DashboardResponse> get(
             @AuthenticationPrincipal CurrentUser currentUser,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth month
+            @RequestParam(required = false, defaultValue = "MONTH") DashboardPeriod period,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
-        YearMonth target = month != null ? month : YearMonth.now();
-        return ResponseEntity.ok(dashboardService.getMonthlyDashboard(currentUser.id(), target));
+        LocalDate anchor = date != null ? date : LocalDate.now();
+        return ResponseEntity.ok(dashboardService.getDashboard(currentUser.id(), period, anchor));
     }
 }

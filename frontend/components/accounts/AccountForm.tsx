@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { api, ApiError } from "@/lib/api";
+import { revalidateAll } from "@/lib/revalidate";
 import { formatBRLInputFromDigits, parseBRLInput } from "@/lib/currency";
 import { accountSchema, type AccountFormValues } from "@/lib/validators/account";
+import type { Account } from "@/types/finance";
 
 const typeLabels: Record<AccountFormValues["type"], string> = {
   CHECKING: "Conta corrente",
@@ -19,8 +21,17 @@ const typeLabels: Record<AccountFormValues["type"], string> = {
   OTHER: "Outros",
 };
 
-export function AccountForm({ onSuccess }: { onSuccess: () => void }) {
-  const [balanceDigits, setBalanceDigits] = useState("");
+export function AccountForm({
+  account,
+  onSuccess,
+}: {
+  account?: Account;
+  onSuccess: () => void;
+}) {
+  const isEditing = !!account;
+  const [balanceDigits, setBalanceDigits] = useState(
+    account ? String(Math.round(account.initialBalance * 100)) : ""
+  );
   const [formError, setFormError] = useState<string | null>(null);
 
   const {
@@ -31,7 +42,14 @@ export function AccountForm({ onSuccess }: { onSuccess: () => void }) {
     formState: { errors, isSubmitting },
   } = useForm<AccountFormValues>({
     resolver: zodResolver(accountSchema),
-    defaultValues: { type: "CHECKING", initialBalance: 0 },
+    defaultValues: account
+      ? {
+          name: account.name,
+          type: account.type,
+          institution: account.institution ?? "",
+          initialBalance: account.initialBalance,
+        }
+      : { type: "CHECKING", initialBalance: 0 },
   });
 
   function handleBalanceChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -43,7 +61,12 @@ export function AccountForm({ onSuccess }: { onSuccess: () => void }) {
   async function onSubmit(values: AccountFormValues) {
     setFormError(null);
     try {
-      await api.post("/api/accounts", values);
+      if (isEditing) {
+        await api.put(`/api/accounts/${account.id}`, values);
+      } else {
+        await api.post("/api/accounts", values);
+      }
+      revalidateAll();
       onSuccess();
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : "Não foi possível salvar a conta.");
@@ -87,7 +110,7 @@ export function AccountForm({ onSuccess }: { onSuccess: () => void }) {
       {formError && <p className="text-sm text-danger">{formError}</p>}
 
       <Button type="submit" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? "Salvando..." : "Salvar conta"}
+        {isSubmitting ? "Salvando..." : isEditing ? "Salvar alterações" : "Salvar conta"}
       </Button>
     </form>
   );
