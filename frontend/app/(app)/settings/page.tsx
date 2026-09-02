@@ -52,6 +52,18 @@ export default function SettingsPage() {
         </Link>
       </Card>
 
+      {user?.role === "ADMIN" && (
+        <Card className="p-0">
+          <Link
+            href="/admin"
+            className="flex items-center justify-between px-5 py-4 text-sm font-medium text-emerald-600 dark:text-emerald"
+          >
+            ⚙️ Administração
+            <span className="text-ink-400">›</span>
+          </Link>
+        </Card>
+      )}
+
       <Button variant="danger" onClick={logout} className="w-full">
         Sair da conta
       </Button>
