@@ -14,6 +14,7 @@ export interface UserSummary {
   name: string;
   email: string;
   avatar: string | null;
+  role: "USER" | "ADMIN";
 }
 
 export interface AuthResponse {

@@ -64,12 +64,20 @@ public class AuthService {
             throw new BadCredentialsException("Credenciais inválidas.");
         }
 
+        if (!user.isActive()) {
+            throw new BusinessException("Sua conta foi desativada. Entre em contato com o suporte.");
+        }
+
         return buildResponse(user);
     }
 
     private AuthResponse buildResponse(User user) {
-        String token = jwtService.generateToken(user.getId(), user.getEmail());
-        return new AuthResponse(token, new AuthResponse.UserSummary(user.getId(), user.getName(), user.getEmail(), user.getAvatar()));
+        String token = jwtService.generateToken(user.getId(), user.getEmail(), user.getRole().name());
+        return new AuthResponse(token, toSummary(user));
+    }
+
+    private AuthResponse.UserSummary toSummary(User user) {
+        return new AuthResponse.UserSummary(user.getId(), user.getName(), user.getEmail(), user.getAvatar(), user.getRole().name());
     }
 
     @Transactional
@@ -81,6 +89,6 @@ public class AuthService {
         user.setAvatar(request.avatar());
         userRepository.save(user);
 
-        return new AuthResponse.UserSummary(user.getId(), user.getName(), user.getEmail(), user.getAvatar());
+        return toSummary(user);
     }
 }

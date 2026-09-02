@@ -60,6 +60,21 @@ export function Sidebar() {
             </Link>
           );
         })}
+
+        {user?.role === "ADMIN" && (
+          <Link
+            href="/admin"
+            className={clsx(
+              "mt-2 flex items-center gap-3 rounded-xl border-t border-ink-100 px-3 pt-3.5 pb-2.5 text-sm font-medium transition-colors dark:border-white/10",
+              pathname.startsWith("/admin")
+                ? "text-emerald-600 dark:text-emerald"
+                : "text-ink-700 hover:bg-ink-50 dark:text-white/70 dark:hover:bg-white/5"
+            )}
+          >
+            <span aria-hidden>⚙️</span>
+            Administração
+          </Link>
+        )}
       </nav>
 
       <button

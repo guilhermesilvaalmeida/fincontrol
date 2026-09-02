@@ -9,4 +9,5 @@ import java.util.UUID;
 public interface AccountRepository extends JpaRepository<Account, UUID> {
     List<Account> findByUserIdAndDeletedAtIsNullOrderByNameAsc(UUID userId);
     Optional<Account> findByIdAndUserId(UUID id, UUID userId);
+    long countByUserIdAndDeletedAtIsNull(UUID userId);
 }

@@ -13,6 +13,8 @@ import java.util.UUID;
 
 public interface TransactionRepository extends JpaRepository<Transaction, UUID>, JpaSpecificationExecutor<Transaction> {
 
+    long countByUserIdAndDeletedAtIsNull(UUID userId);
+
     Optional<Transaction> findByIdAndUserId(UUID id, UUID userId);
 
     @Query("""

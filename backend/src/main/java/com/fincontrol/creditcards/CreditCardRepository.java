@@ -9,4 +9,5 @@ import java.util.UUID;
 public interface CreditCardRepository extends JpaRepository<CreditCard, UUID> {
     List<CreditCard> findByUserIdAndDeletedAtIsNullOrderByNameAsc(UUID userId);
     Optional<CreditCard> findByIdAndUserId(UUID id, UUID userId);
+    long countByUserIdAndDeletedAtIsNull(UUID userId);
 }

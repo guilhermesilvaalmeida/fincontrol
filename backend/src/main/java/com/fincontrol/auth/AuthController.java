@@ -47,7 +47,7 @@ public class AuthController {
     public ResponseEntity<AuthResponse.UserSummary> me(@AuthenticationPrincipal CurrentUser currentUser) {
         User user = userRepository.findById(currentUser.id())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
-        return ResponseEntity.ok(new AuthResponse.UserSummary(user.getId(), user.getName(), user.getEmail(), user.getAvatar()));
+        return ResponseEntity.ok(new AuthResponse.UserSummary(user.getId(), user.getName(), user.getEmail(), user.getAvatar(), user.getRole().name()));
     }
 
     @PutMapping("/me")
