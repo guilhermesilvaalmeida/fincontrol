@@ -8,13 +8,26 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { CreditCardForm } from "@/components/creditcards/CreditCardForm";
 import { CreditCardTile } from "@/components/creditcards/CreditCardTile";
 import { InstallmentPurchaseForm } from "@/components/creditcards/InstallmentPurchaseForm";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import type { CreditCard } from "@/types/finance";
 
 export default function CreditCardsPage() {
   const { data: cards, isLoading, mutate } = useSWR<CreditCard[]>("/api/credit-cards", api.get);
   const [showCardForm, setShowCardForm] = useState(false);
   const [showPurchaseForm, setShowPurchaseForm] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  async function deleteCard(card: CreditCard) {
+    if (!window.confirm(`Excluir o cartão "${card.name}"? Esta ação não pode ser desfeita.`)) return;
+
+    setActionError(null);
+    try {
+      await api.delete(`/api/credit-cards/${card.id}`);
+      await mutate((items) => items?.filter((item) => item.id !== card.id), { revalidate: false });
+    } catch (error) {
+      setActionError(error instanceof ApiError ? error.message : "Não foi possível excluir o cartão.");
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -29,6 +42,8 @@ export default function CreditCardsPage() {
           <Button onClick={() => setShowCardForm((v) => !v)}>{showCardForm ? "Cancelar" : "+ Novo cartão"}</Button>
         </div>
       </div>
+
+      {actionError && <p className="text-sm text-danger">{actionError}</p>}
 
       {showCardForm && (
         <Card>
@@ -65,8 +80,8 @@ export default function CreditCardsPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {cards.map((card) => (
-            <CreditCardTile key={card.id} card={card} />
+            {cards.map((card) => (
+              <CreditCardTile key={card.id} card={card} onDelete={deleteCard} />
           ))}
         </div>
       )}

@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { Money } from "@/components/ui/Money";
 import type { CreditCard } from "@/types/finance";
 
-export function CreditCardTile({ card }: { card: CreditCard }) {
+export function CreditCardTile({ card, onDelete }: { card: CreditCard; onDelete: (card: CreditCard) => void }) {
   const usedPercent = card.creditLimit > 0 ? Math.min(100, (card.committedAmount / card.creditLimit) * 100) : 0;
 
   return (
-    <Link href={`/credit-cards/${card.id}`}>
-      <Card className="flex flex-col gap-3 transition-shadow hover:shadow-lg">
+    <Card className="flex flex-col gap-3 transition-shadow hover:shadow-lg">
+      <Link href={`/credit-cards/${card.id}`} className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div>
             <p className="font-medium text-ink dark:text-white">{card.name}</p>
@@ -41,7 +42,12 @@ export function CreditCardTile({ card }: { card: CreditCard }) {
           <span>Fechamento dia {card.closingDay}</span>
           <span>Vencimento dia {card.dueDay}</span>
         </div>
-      </Card>
-    </Link>
+      </Link>
+      <div className="flex justify-end border-t border-ink-100 pt-3 dark:border-white/10">
+        <Button variant="ghost" size="sm" onClick={() => onDelete(card)}>
+          Excluir cartão
+        </Button>
+      </div>
+    </Card>
   );
 }
