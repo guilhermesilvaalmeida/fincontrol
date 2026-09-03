@@ -14,6 +14,7 @@ public record TransactionResponse(
         CategoryRef category,
         AccountRef account,
         CreditCardRef creditCard,
+        UUID installmentPurchaseId,
         Integer installmentNumber,
         Integer installmentTotal,
         String paymentMethod,

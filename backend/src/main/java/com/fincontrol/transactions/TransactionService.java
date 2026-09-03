@@ -147,6 +147,7 @@ public class TransactionService {
                 category == null ? null : new TransactionResponse.CategoryRef(category.getId(), category.getName(), category.getIcon(), category.getColor()),
                 account == null ? null : new TransactionResponse.AccountRef(account.getId(), account.getName()),
                 creditCard == null ? null : new TransactionResponse.CreditCardRef(creditCard.getId(), creditCard.getName()),
+                t.getInstallmentPurchaseId(),
                 t.getInstallmentNumber(),
                 t.getInstallmentTotal(),
                 t.getPaymentMethod(),

@@ -39,12 +39,25 @@ export default function TransactionsPage() {
   );
 
   async function deleteTransaction(transaction: Transaction) {
-    if (!window.confirm(`Excluir a transação "${transaction.description}"? Esta ação não pode ser desfeita.`)) return;
+    const isInstallmentPurchase = Boolean(transaction.installmentPurchaseId);
+    const confirmation = isInstallmentPurchase
+      ? `Excluir a compra parcelada "${transaction.description.replace(/ \(\d+\/\d+\)$/, "")}" inteira? Todas as parcelas serão removidas. Esta ação não pode ser desfeita.`
+      : `Excluir a transação "${transaction.description}"? Esta ação não pode ser desfeita.`;
+    if (!window.confirm(confirmation)) return;
 
     setActionError(null);
     try {
-      await api.delete(`/api/transactions/${transaction.id}`);
-      await mutate((items) => items?.filter((item) => item.id !== transaction.id), { revalidate: false });
+      if (isInstallmentPurchase) {
+        await api.delete(`/api/installment-purchases/${transaction.installmentPurchaseId}`);
+      } else {
+        await api.delete(`/api/transactions/${transaction.id}`);
+      }
+      await mutate(
+        (items) => items?.filter((item) => isInstallmentPurchase
+          ? item.installmentPurchaseId !== transaction.installmentPurchaseId
+          : item.id !== transaction.id),
+        { revalidate: false }
+      );
       revalidateAll();
     } catch (error) {
       setActionError(error instanceof ApiError ? error.message : "Não foi possível excluir a transação.");

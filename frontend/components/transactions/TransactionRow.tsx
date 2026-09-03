@@ -40,7 +40,7 @@ export function TransactionRow({
             Editar
           </Button>
           <Button variant="ghost" size="sm" onClick={() => onDelete(transaction)}>
-            Excluir
+            {transaction.installmentPurchaseId ? "Excluir compra" : "Excluir"}
           </Button>
         </div>
       </div>

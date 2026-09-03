@@ -35,6 +35,7 @@ export interface Transaction {
   category: { id: string; name: string; icon: string | null; color: string | null } | null;
   account: { id: string; name: string } | null;
   creditCard: { id: string; name: string } | null;
+  installmentPurchaseId: string | null;
   installmentNumber: number | null;
   installmentTotal: number | null;
   paymentMethod: string | null;
