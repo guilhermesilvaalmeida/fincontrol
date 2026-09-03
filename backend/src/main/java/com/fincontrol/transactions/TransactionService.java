@@ -58,7 +58,7 @@ public class TransactionService {
         Sort sort = resolveSort(filter.sort());
 
         return transactionRepository.findAll(spec, sort).stream()
-                .map(this::toResponse)
+            .map(transaction -> toResponse(transaction, userId))
                 .toList();
     }
 
@@ -71,23 +71,29 @@ public class TransactionService {
         transaction.setUserId(userId);
         applyRequest(transaction, request, account, category);
 
-        return toResponse(transactionRepository.save(transaction));
+        return toResponse(transactionRepository.save(transaction), userId);
     }
 
     @Transactional
     public TransactionResponse update(UUID id, UUID userId, TransactionRequest request) {
         Transaction transaction = getOwned(id, userId);
+        if (transaction.getInstallmentPurchaseId() != null) {
+            throw new com.fincontrol.common.BusinessException("Edite a compra parcelada inteira para manter as parcelas consistentes.");
+        }
         Account account = getOwnedAccount(request.accountId(), userId);
         Category category = getOwnedCategory(request.categoryId(), userId);
 
         applyRequest(transaction, request, account, category);
 
-        return toResponse(transactionRepository.save(transaction));
+        return toResponse(transactionRepository.save(transaction), userId);
     }
 
     @Transactional
     public void delete(UUID id, UUID userId) {
         Transaction transaction = getOwned(id, userId);
+        if (transaction.getInstallmentPurchaseId() != null) {
+            throw new com.fincontrol.common.BusinessException("Exclua a compra parcelada inteira para remover todas as parcelas.");
+        }
         transaction.setDeletedAt(Instant.now());
         transactionRepository.save(transaction);
     }
@@ -128,10 +134,10 @@ public class TransactionService {
         };
     }
 
-    private TransactionResponse toResponse(Transaction t) {
-        Category category = categoryRepository.findById(t.getCategoryId()).orElse(null);
-        Account account = t.getAccountId() != null ? accountRepository.findById(t.getAccountId()).orElse(null) : null;
-        CreditCard creditCard = t.getCreditCardId() != null ? creditCardRepository.findById(t.getCreditCardId()).orElse(null) : null;
+    private TransactionResponse toResponse(Transaction t, UUID userId) {
+        Category category = categoryRepository.findByIdAndUserId(t.getCategoryId(), userId).orElse(null);
+        Account account = t.getAccountId() != null ? accountRepository.findByIdAndUserId(t.getAccountId(), userId).orElse(null) : null;
+        CreditCard creditCard = t.getCreditCardId() != null ? creditCardRepository.findByIdAndUserId(t.getCreditCardId(), userId).orElse(null) : null;
 
         return new TransactionResponse(
                 t.getId(),

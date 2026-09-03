@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { TransactionRow } from "@/components/transactions/TransactionRow";
+import { TransactionForm } from "@/components/transactions/TransactionForm";
 import { api } from "@/lib/api";
+import { ApiError } from "@/lib/api";
+import { revalidateAll } from "@/lib/revalidate";
 import type { Account, Category, Transaction, TransactionType } from "@/types/finance";
 
 export default function TransactionsPage() {
@@ -17,6 +20,8 @@ export default function TransactionsPage() {
   const [categoryId, setCategoryId] = useState("");
   const [accountId, setAccountId] = useState("");
   const [sort, setSort] = useState("recent");
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const { data: categories } = useSWR<Category[]>("/api/categories", api.get);
   const { data: accounts } = useSWR<Account[]>("/api/accounts", api.get);
@@ -28,10 +33,23 @@ export default function TransactionsPage() {
   if (accountId) params.set("accountId", accountId);
   if (sort) params.set("sort", sort);
 
-  const { data: transactions, isLoading } = useSWR<Transaction[]>(
+  const { data: transactions, isLoading, mutate } = useSWR<Transaction[]>(
     `/api/transactions?${params.toString()}`,
     api.get
   );
+
+  async function deleteTransaction(transaction: Transaction) {
+    if (!window.confirm(`Excluir a transação "${transaction.description}"? Esta ação não pode ser desfeita.`)) return;
+
+    setActionError(null);
+    try {
+      await api.delete(`/api/transactions/${transaction.id}`);
+      await mutate((items) => items?.filter((item) => item.id !== transaction.id), { revalidate: false });
+      revalidateAll();
+    } catch (error) {
+      setActionError(error instanceof ApiError ? error.message : "Não foi possível excluir a transação.");
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -41,6 +59,22 @@ export default function TransactionsPage() {
           <Button>+ Adicionar gasto</Button>
         </Link>
       </div>
+
+      {editingTransaction && (
+        <Card>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="font-display text-base font-semibold text-ink dark:text-white">Editar transação</h2>
+            <Button variant="ghost" size="sm" onClick={() => setEditingTransaction(null)}>Cancelar</Button>
+          </div>
+          <TransactionForm
+            transaction={editingTransaction}
+            onSuccess={() => {
+              setEditingTransaction(null);
+              mutate();
+            }}
+          />
+        </Card>
+      )}
 
       <Card className="flex flex-col gap-4">
         <input
@@ -86,6 +120,7 @@ export default function TransactionsPage() {
       </Card>
 
       <Card>
+        {actionError && <p className="mb-3 text-sm text-danger">{actionError}</p>}
         {isLoading ? (
           <div className="flex flex-col gap-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -102,7 +137,7 @@ export default function TransactionsPage() {
         ) : (
           <ul className="divide-y divide-ink-100 dark:divide-white/10">
             {transactions.map((t) => (
-              <TransactionRow key={t.id} transaction={t} />
+              <TransactionRow key={t.id} transaction={t} onEdit={setEditingTransaction} onDelete={deleteTransaction} />
             ))}
           </ul>
         )}

@@ -2,6 +2,7 @@ package com.fincontrol.creditcards;
 
 import com.fincontrol.creditcards.dto.CreditCardRequest;
 import com.fincontrol.creditcards.dto.CreditCardResponse;
+import com.fincontrol.common.BusinessException;
 import com.fincontrol.common.ResourceNotFoundException;
 import com.fincontrol.transactions.TransactionRepository;
 import org.springframework.stereotype.Service;
@@ -49,6 +50,9 @@ public class CreditCardService {
     @Transactional
     public void delete(UUID id, UUID userId) {
         CreditCard card = getOwned(id, userId);
+        if (transactionRepository.existsByCreditCardIdAndUserIdAndDeletedAtIsNull(id, userId)) {
+            throw new BusinessException("Este cartão possui lançamentos vinculados e não pode ser excluído. Mantenha-o para preservar seu histórico financeiro.");
+        }
         card.setDeletedAt(Instant.now());
         creditCardRepository.save(card);
     }

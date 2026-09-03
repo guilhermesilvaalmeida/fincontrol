@@ -12,21 +12,25 @@ import { api, ApiError } from "@/lib/api";
 import { revalidateAll } from "@/lib/revalidate";
 import { formatBRLInputFromDigits, parseBRLInput } from "@/lib/currency";
 import { transactionSchema, type TransactionFormValues } from "@/lib/validators/transaction";
-import type { Account, Category, TransactionType } from "@/types/finance";
+import type { Account, Category, Transaction, TransactionType } from "@/types/finance";
 
 const paymentMethods = ["Dinheiro", "Débito", "Crédito", "Pix", "Transferência"];
 
 export function TransactionForm({
   onSuccess,
   defaultType = "EXPENSE",
+  transaction,
 }: {
   onSuccess?: () => void;
   defaultType?: TransactionType;
+  transaction?: Transaction;
 }) {
   const { data: categories } = useSWR<Category[]>("/api/categories", api.get);
   const { data: accounts } = useSWR<Account[]>("/api/accounts", api.get);
 
-  const [amountDigits, setAmountDigits] = useState("");
+  const [amountDigits, setAmountDigits] = useState(() =>
+    transaction ? String(Math.round(transaction.amount * 100)) : ""
+  );
   const [formError, setFormError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -41,9 +45,14 @@ export function TransactionForm({
   } = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
-      type: defaultType,
-      occurredOn: new Date().toISOString().slice(0, 10),
-      amount: 0,
+      type: transaction?.type ?? defaultType,
+      occurredOn: transaction?.occurredOn ?? new Date().toISOString().slice(0, 10),
+      amount: transaction?.amount ?? 0,
+      description: transaction?.description ?? "",
+      categoryId: transaction?.category?.id ?? "",
+      accountId: transaction?.account?.id ?? "",
+      paymentMethod: transaction?.paymentMethod ?? "",
+      notes: transaction?.notes ?? "",
     },
   });
 
@@ -61,7 +70,11 @@ export function TransactionForm({
   async function onSubmit(values: TransactionFormValues) {
     setFormError(null);
     try {
-      await api.post("/api/transactions", values);
+      if (transaction) {
+        await api.put(`/api/transactions/${transaction.id}`, values);
+      } else {
+        await api.post("/api/transactions", values);
+      }
       revalidateAll();
       setSuccess(true);
       setAmountDigits("");
@@ -78,7 +91,7 @@ export function TransactionForm({
       onSuccess?.();
       setTimeout(() => setSuccess(false), 2500);
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : "Não foi possível salvar o gasto. Tente novamente.");
+      setFormError(err instanceof ApiError ? err.message : "Não foi possível salvar a transação. Tente novamente.");
     }
   }
 
@@ -176,10 +189,10 @@ export function TransactionForm({
       <Input label="Data" type="date" error={errors.occurredOn?.message} {...register("occurredOn")} />
 
       {formError && <p className="text-sm text-danger">{formError}</p>}
-      {success && <p className="text-sm text-emerald">Gasto salvo com sucesso! ✅</p>}
+      {success && <p className="text-sm text-emerald">Transação salva com sucesso.</p>}
 
       <Button type="submit" disabled={isSubmitting} className="w-full" size="lg">
-        {isSubmitting ? "Salvando..." : "Salvar"}
+        {isSubmitting ? "Salvando..." : transaction ? "Salvar alterações" : "Salvar"}
       </Button>
     </form>
   );

@@ -47,7 +47,7 @@ public class InstallmentService {
 
     public List<InstallmentPurchaseResponse> listForUser(UUID userId) {
         return installmentPurchaseRepository.findByUserIdOrderByPurchaseDateDesc(userId).stream()
-                .map(this::toResponse)
+                                .map(purchase -> toResponse(purchase, userId))
                 .toList();
     }
 
@@ -72,7 +72,7 @@ public class InstallmentService {
         List<Transaction> installments = buildInstallmentTransactions(userId, purchase);
         transactionRepository.saveAll(installments);
 
-        return toResponse(purchase);
+        return toResponse(purchase, userId);
     }
 
     @Transactional
@@ -117,8 +117,8 @@ public class InstallmentService {
         return transactions;
     }
 
-    private InstallmentPurchaseResponse toResponse(InstallmentPurchase purchase) {
-        CreditCard card = creditCardRepository.findById(purchase.getCreditCardId()).orElse(null);
+        private InstallmentPurchaseResponse toResponse(InstallmentPurchase purchase, UUID userId) {
+                CreditCard card = creditCardRepository.findByIdAndUserId(purchase.getCreditCardId(), userId).orElse(null);
         BigDecimal installmentAmount = purchase.getTotalAmount()
                 .divide(BigDecimal.valueOf(purchase.getInstallmentsCount()), 2, RoundingMode.DOWN);
 

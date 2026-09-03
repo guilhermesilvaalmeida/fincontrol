@@ -17,6 +17,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
 
     Optional<Transaction> findByIdAndUserId(UUID id, UUID userId);
 
+        boolean existsByCreditCardIdAndUserIdAndDeletedAtIsNull(UUID creditCardId, UUID userId);
+
     @Query("""
             SELECT COALESCE(SUM(CASE WHEN t.type = 'INCOME' THEN t.amount ELSE -t.amount END), 0)
             FROM Transaction t
