@@ -10,13 +10,13 @@ import { api, ApiError } from "@/lib/api";
 import { revalidateAll } from "@/lib/revalidate";
 import { formatBRLInputFromDigits, parseBRLInput } from "@/lib/currency";
 import { budgetSchema, type BudgetFormValues } from "@/lib/validators/budget";
-import type { Category } from "@/types/finance";
+import type { Budget, Category } from "@/types/finance";
 
-export function BudgetForm({ onSuccess }: { onSuccess: () => void }) {
+export function BudgetForm({ budget, onSuccess }: { budget?: Budget; onSuccess: () => void }) {
   const { data: categories } = useSWR<Category[]>("/api/categories", api.get);
   const expenseCategories = (categories ?? []).filter((c) => c.groupName !== "Receitas");
 
-  const [amountDigits, setAmountDigits] = useState("");
+  const [amountDigits, setAmountDigits] = useState(budget ? Math.round(budget.amount * 100).toString() : "");
   const [formError, setFormError] = useState<string | null>(null);
 
   const {
@@ -24,7 +24,10 @@ export function BudgetForm({ onSuccess }: { onSuccess: () => void }) {
     control,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<BudgetFormValues>({ resolver: zodResolver(budgetSchema) });
+  } = useForm<BudgetFormValues>({
+    resolver: zodResolver(budgetSchema),
+    defaultValues: budget ? { categoryId: budget.categoryId, amount: budget.amount } : undefined,
+  });
 
   function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
     const digits = e.target.value.replace(/\D/g, "");
@@ -35,7 +38,11 @@ export function BudgetForm({ onSuccess }: { onSuccess: () => void }) {
   async function onSubmit(values: BudgetFormValues) {
     setFormError(null);
     try {
-      await api.post("/api/budgets", values);
+      if (budget) {
+        await api.put(`/api/budgets/${budget.id}`, values);
+      } else {
+        await api.post("/api/budgets", values);
+      }
       revalidateAll();
       onSuccess();
     } catch (err) {
@@ -49,7 +56,7 @@ export function BudgetForm({ onSuccess }: { onSuccess: () => void }) {
         control={control}
         name="categoryId"
         render={({ field }) => (
-          <Select label="Categoria" error={errors.categoryId?.message} {...field}>
+          <Select label="Categoria" error={errors.categoryId?.message} disabled={Boolean(budget)} {...field}>
             <option value="">Selecione...</option>
             {expenseCategories.map((c) => (
               <option key={c.id} value={c.id}>
@@ -78,7 +85,7 @@ export function BudgetForm({ onSuccess }: { onSuccess: () => void }) {
       {formError && <p className="text-sm text-danger">{formError}</p>}
 
       <Button type="submit" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? "Salvando..." : "Criar orçamento"}
+        {isSubmitting ? "Salvando..." : budget ? "Salvar alterações" : "Criar orçamento"}
       </Button>
     </form>
   );

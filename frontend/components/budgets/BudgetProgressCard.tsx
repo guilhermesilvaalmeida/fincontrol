@@ -10,7 +10,7 @@ const statusStyles: Record<Budget["status"], { bar: string; text: string }> = {
   exceeded: { bar: "bg-danger", text: "text-danger" },
 };
 
-export function BudgetProgressCard({ budget, onDelete }: { budget: Budget; onDelete?: () => void }) {
+export function BudgetProgressCard({ budget, onEdit, onDelete }: { budget: Budget; onEdit?: () => void; onDelete?: () => void }) {
   const style = statusStyles[budget.status];
   const widthPercent = Math.min(100, budget.percentUsed);
 
@@ -23,11 +23,18 @@ export function BudgetProgressCard({ budget, onDelete }: { budget: Budget; onDel
           </span>
           <p className="font-medium text-ink dark:text-white">{budget.categoryName}</p>
         </div>
-        {onDelete && (
-          <button onClick={onDelete} className="text-xs text-ink-400 hover:text-danger">
-            Remover
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {onEdit && (
+            <button onClick={onEdit} className="text-xs text-ink-400 hover:text-emerald">
+              Editar
+            </button>
+          )}
+          {onDelete && (
+            <button onClick={onDelete} className="text-xs text-ink-400 hover:text-danger">
+              Remover
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="h-2 w-full overflow-hidden rounded-full bg-ink-100 dark:bg-white/10">
