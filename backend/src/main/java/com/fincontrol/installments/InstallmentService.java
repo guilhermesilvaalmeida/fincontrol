@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -81,9 +80,8 @@ public class InstallmentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Compra parcelada não encontrada."));
 
         List<Transaction> installments = transactionRepository.findByInstallmentPurchaseIdOrderByInstallmentNumberAsc(purchase.getId());
-        Instant now = Instant.now();
-        installments.forEach(t -> t.setDeletedAt(now));
-        transactionRepository.saveAll(installments);
+        transactionRepository.deleteAll(installments);
+        transactionRepository.flush();
 
         installmentPurchaseRepository.delete(purchase);
     }
