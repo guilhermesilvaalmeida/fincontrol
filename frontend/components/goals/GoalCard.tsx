@@ -11,7 +11,9 @@ import type { Goal } from "@/types/finance";
 
 export function GoalCard({ goal, onDelete }: { goal: Goal; onDelete: () => void }) {
   const [showContribute, setShowContribute] = useState(false);
+  const [showAdjust, setShowAdjust] = useState(false);
   const [digits, setDigits] = useState("");
+  const [adjustDigits, setAdjustDigits] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,6 +30,21 @@ export function GoalCard({ goal, onDelete }: { goal: Goal; onDelete: () => void 
       setShowContribute(false);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Não foi possível registrar a contribuição.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleAdjust() {
+    const amount = parseBRLInput(adjustDigits);
+    setSaving(true);
+    setError(null);
+    try {
+      await api.patch(`/api/goals/${goal.id}/amount`, { amount });
+      revalidateAll();
+      setShowAdjust(false);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Não foi possível ajustar o valor guardado.");
     } finally {
       setSaving(false);
     }
@@ -62,6 +79,43 @@ export function GoalCard({ goal, onDelete }: { goal: Goal; onDelete: () => void 
         </span>
         <span className="font-medium text-emerald">{goal.percentComplete.toFixed(0)}%</span>
       </div>
+
+      {showAdjust ? (
+        <div className="flex flex-col gap-2">
+          <label className="text-xs font-medium text-ink-400">Valor guardado</label>
+          <div className="flex items-center rounded-xl border border-ink-100 bg-white px-3 py-2 focus-within:border-emerald dark:border-white/10 dark:bg-surface-cardDark">
+            <span className="mr-1 text-sm text-ink-400">R$</span>
+            <input
+              inputMode="numeric"
+              placeholder="0,00"
+              value={formatBRLInputFromDigits(adjustDigits)}
+              onChange={(e) => setAdjustDigits(e.target.value.replace(/\D/g, ""))}
+              className="money w-full bg-transparent text-sm outline-none"
+              autoFocus
+            />
+          </div>
+          {error && <p className="text-xs text-danger">{error}</p>}
+          <div className="flex gap-2">
+            <Button size="sm" onClick={handleAdjust} disabled={saving} className="flex-1">
+              {saving ? "Salvando..." : "Salvar valor"}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setShowAdjust(false)}>
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => {
+            setAdjustDigits(Math.round(goal.currentAmount * 100).toString());
+            setShowAdjust(true);
+          }}
+        >
+          Configurar valor guardado
+        </Button>
+      )}
 
       {goal.completed ? (
         <p className="rounded-xl bg-emerald-50 px-3 py-2 text-center text-sm font-medium text-emerald-600 dark:bg-emerald/10 dark:text-emerald">

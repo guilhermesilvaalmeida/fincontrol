@@ -2,6 +2,7 @@ package com.fincontrol.goals;
 
 import com.fincontrol.common.ResourceNotFoundException;
 import com.fincontrol.goals.dto.GoalContributionRequest;
+import com.fincontrol.goals.dto.GoalAmountRequest;
 import com.fincontrol.goals.dto.GoalRequest;
 import com.fincontrol.goals.dto.GoalResponse;
 import org.springframework.stereotype.Service;
@@ -53,6 +54,14 @@ public class GoalService {
     public GoalResponse contribute(UUID id, UUID userId, GoalContributionRequest request) {
         Goal goal = getOwned(id, userId);
         goal.setCurrentAmount(goal.getCurrentAmount().add(request.amount()));
+
+        return toResponse(goalRepository.save(goal));
+    }
+
+    @Transactional
+    public GoalResponse updateAmount(UUID id, UUID userId, GoalAmountRequest request) {
+        Goal goal = getOwned(id, userId);
+        goal.setCurrentAmount(request.amount());
 
         return toResponse(goalRepository.save(goal));
     }

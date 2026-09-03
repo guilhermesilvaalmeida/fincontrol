@@ -1,6 +1,7 @@
 package com.fincontrol.goals;
 
 import com.fincontrol.goals.dto.GoalContributionRequest;
+import com.fincontrol.goals.dto.GoalAmountRequest;
 import com.fincontrol.goals.dto.GoalRequest;
 import com.fincontrol.goals.dto.GoalResponse;
 import com.fincontrol.security.CurrentUser;
@@ -52,6 +53,15 @@ public class GoalController {
             @Valid @RequestBody GoalContributionRequest request
     ) {
         return ResponseEntity.ok(goalService.contribute(id, currentUser.id(), request));
+    }
+
+    @PatchMapping("/{id}/amount")
+    public ResponseEntity<GoalResponse> updateAmount(
+            @AuthenticationPrincipal CurrentUser currentUser,
+            @PathVariable UUID id,
+            @Valid @RequestBody GoalAmountRequest request
+    ) {
+        return ResponseEntity.ok(goalService.updateAmount(id, currentUser.id(), request));
     }
 
     @DeleteMapping("/{id}")
